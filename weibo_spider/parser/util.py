@@ -28,7 +28,7 @@ def handle_html(cookie, url):
             import io
             import os
 
-            resp_file = os.path.join(TEST_DATA_DIR, '%s.html' % hash_url(url))
+            resp_file = os.path.join(TEST_DATA_DIR, f'{hash_url(url)}.html')
             with io.open(resp_file, 'w', encoding='utf-8') as f:
                 f.write(resp.text)
 
@@ -39,8 +39,7 @@ def handle_html(cookie, url):
                 f.write(json.dumps(url_map, indent=4, ensure_ascii=False))
                 f.truncate()
 
-        selector = etree.HTML(resp.content)
-        return selector
+        return etree.HTML(resp.content)
     except Exception as e:
         logger.exception(e)
 
@@ -63,22 +62,20 @@ def bid2mid(bid):
     bidlen = len(bid)
     head = bidlen % 4
     digit = int((bidlen - head) / 4)
-    dlist = [bid[0:head]]
+    dlist = [bid[:head]]
     for d in range(1, digit + 1):
         dlist.append(bid[head:head + d * 4])
         head += 4
     mid = ''
     for d in dlist:
         num = 0
-        idx = 0
         strlen = len(d)
-        for char in d:
+        for idx, char in enumerate(d):
             power = (strlen - (idx + 1))
             num += alphabet.index(char) * (base**power)
-            idx += 1
             strnum = str(num)
             while (len(d) == 4 and len(strnum) < 7):
-                strnum = '0' + strnum
+                strnum = f'0{strnum}'
         mid += strnum
     return mid
 
@@ -96,8 +93,8 @@ def to_video_download_url(cookie, video_page_url):
         video_url = wb_info['data']['object']['stream'].get('hd_url')
         if not video_url:
             video_url = wb_info['data']['object']['stream']['url']
-            if not video_url:  # 说明该视频为直播
-                video_url = ''
+        if not video_url:  # 说明该视频为直播
+            video_url = ''
     except json.decoder.JSONDecodeError:
         logger.warning(u'当前账号没有浏览该视频的权限')
 
@@ -112,7 +109,7 @@ def string_to_int(string):
     if isinstance(string, int):
         return string
     elif string.endswith(u'万+'):
-        string = string[:-2] + '0000'
+        string = f'{string[:-2]}0000'
     elif string.endswith(u'万'):
         string = float(string[:-1]) * 10000
     elif string.endswith(u'亿'):

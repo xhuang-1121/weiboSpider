@@ -59,15 +59,17 @@ class MySqlWriter(Writer):
             values = ', '.join(['%s'] * len(data_list[0]))
             connection = pymysql.connect(**self.mysql_config)
             cursor = connection.cursor()
-            sql = """INSERT INTO {table}({keys}) VALUES ({values}) ON
-                        DUPLICATE KEY UPDATE""".format(table=table,
-                                                       keys=keys,
-                                                       values=values)
             update = ','.join([
                 ' {key} = values({key})'.format(key=key)
                 for key in data_list[0]
             ])
-            sql += update
+            sql = (
+                """INSERT INTO {table}({keys}) VALUES ({values}) ON
+                        DUPLICATE KEY UPDATE""".format(
+                    table=table, keys=keys, values=values
+                )
+                + update
+            )
             try:
                 cursor.executemany(
                     sql, [tuple(data.values()) for data in data_list])

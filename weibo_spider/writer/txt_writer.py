@@ -15,10 +15,7 @@ class TxtWriter(Writer):
                           ('weibo_num', '微博数'), ('following', '关注数'),
                           ('followers', '粉丝数')]
 
-        if filter:
-            self.weibo_header = u'原创微博内容'
-        else:
-            self.weibo_header = u'微博内容'
+        self.weibo_header = u'原创微博内容' if filter else u'微博内容'
         self.weibo_desc = [('publish_place', '微博位置'), ('publish_time', '发布时间'),
                            ('up_num', '点赞数'), ('retweet_num', '转发数'),
                            ('comment_num', '评论数'), ('publish_tool', '发布工具')]
@@ -26,7 +23,8 @@ class TxtWriter(Writer):
     def write_user(self, user):
         self.user = user
         user_info = '\n'.join(
-            [v + '：' + str(self.user.__dict__[k]) for k, v in self.user_desc])
+            [f'{v}：{str(self.user.__dict__[k])}' for k, v in self.user_desc]
+        )
 
         with open(self.file_path, 'ab') as f:
             f.write((self.user_header + '：\n' + user_info + '\n\n').encode(
@@ -43,11 +41,14 @@ class TxtWriter(Writer):
             self.weibo_header = ''
 
         try:
-            temp_result = []
-            for w in weibo:
-                temp_result.append(w.__dict__['content'] + '\n' + '\n'.join(
-                    [v + '：' + str(w.__dict__[k])
-                     for k, v in self.weibo_desc]))
+            temp_result = [
+                w.__dict__['content']
+                + '\n'
+                + '\n'.join(
+                    [f'{v}：{str(w.__dict__[k])}' for k, v in self.weibo_desc]
+                )
+                for w in weibo
+            ]
             result = '\n\n'.join(temp_result) + '\n\n'
 
             with open(self.file_path, 'ab') as f:

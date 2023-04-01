@@ -44,7 +44,7 @@ class Downloader(ABC):
         except Exception as e:
             error_file = self.file_dir + os.sep + 'not_downloaded.txt'
             with open(error_file, 'ab') as f:
-                url = weibo_id + ':' + file_path + ':' + url + '\n'
+                url = f'{weibo_id}:{file_path}:{url}' + '\n'
                 f.write(url.encode(sys.stdout.encoding))
             logger.exception(e)
 

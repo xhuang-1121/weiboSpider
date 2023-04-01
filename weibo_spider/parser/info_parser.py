@@ -11,7 +11,7 @@ logger = logging.getLogger('spider.info_parser')
 class InfoParser(Parser):
     def __init__(self, cookie, user_id):
         self.cookie = cookie
-        self.url = 'https://weibo.cn/%s/info' % (user_id)
+        self.url = f'https://weibo.cn/{user_id}/info'
         self.selector = handle_html(self.cookie, self.url)
 
     def extract_user_info(self):
@@ -20,7 +20,7 @@ class InfoParser(Parser):
             user = User()
             nickname = self.selector.xpath('//title/text()')[0]
             nickname = nickname[:-3]
-            if nickname == u'登录 - 新' or nickname == u'新浪':
+            if nickname in [u'登录 - 新', u'新浪']:
                 logger.warning(u'cookie错误或已过期,请按照README中方法重新获取')
                 sys.exit()
             user.nickname = nickname
@@ -35,21 +35,21 @@ class InfoParser(Parser):
                 if i.split(':', 1)[0] in zh_list:
                     setattr(user, en_list[zh_list.index(i.split(':', 1)[0])],
                             i.split(':', 1)[1].replace('\u3000', ''))
-			
-            experienced = self.selector.xpath("//div[@class='tip'][2]/text()") 
-            if experienced and experienced[0] == u'学习经历':
-                user.education = self.selector.xpath(
-                    "//div[@class='c'][4]/text()")[0][1:].replace(
-                        u'\xa0', u' ')
-                if self.selector.xpath(
-                        "//div[@class='tip'][3]/text()")[0] == u'工作经历':
-                    user.work = self.selector.xpath(
-                        "//div[@class='c'][5]/text()")[0][1:].replace(
+
+            if experienced := self.selector.xpath("//div[@class='tip'][2]/text()"):
+                if experienced[0] == u'学习经历':
+                    user.education = self.selector.xpath(
+                        "//div[@class='c'][4]/text()")[0][1:].replace(
                             u'\xa0', u' ')
-            elif experienced and experienced[0] == u'工作经历':
-                user.work = self.selector.xpath(
-                    "//div[@class='c'][4]/text()")[0][1:].replace(
-                        u'\xa0', u' ')
+                    if self.selector.xpath(
+                            "//div[@class='tip'][3]/text()")[0] == u'工作经历':
+                        user.work = self.selector.xpath(
+                            "//div[@class='c'][5]/text()")[0][1:].replace(
+                                u'\xa0', u' ')
+                elif experienced[0] == u'工作经历':
+                    user.work = self.selector.xpath(
+                        "//div[@class='c'][4]/text()")[0][1:].replace(
+                            u'\xa0', u' ')
             return user
         except Exception as e:
             logger.exception(e)

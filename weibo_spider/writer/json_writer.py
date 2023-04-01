@@ -19,11 +19,10 @@ class JsonWriter(Writer):
         """更新要写入json结果文件中的数据，已经存在于json中的信息更新为最新值，不存在的信息添加到data中"""
         data['user'] = self.user.__dict__
         if data.get('weibo'):
-            is_new = 1  # 待写入微博是否全部为新微博，即待写入微博与json中的数据不重复
-            for old in data['weibo']:
-                if weibo_info[-1]['id'] == old['id']:
-                    is_new = 0
-                    break
+            is_new = next(
+                (0 for old in data['weibo'] if weibo_info[-1]['id'] == old['id']),
+                1,
+            )
             if is_new == 0:
                 for new in weibo_info:
                     flag = 1

@@ -12,13 +12,13 @@ logger = logging.getLogger('spider.comment_parser')
 class CommentParser(Parser):
     def __init__(self, cookie, weibo_id):
         self.cookie = cookie
-        self.url = 'https://weibo.cn/comment/' + weibo_id
+        self.url = f'https://weibo.cn/comment/{weibo_id}'
         self.selector = handle_html(self.cookie, self.url)
 
     def get_long_weibo(self):
         """获取长原创微博"""
         try:
-            for i in range(5):
+            for _ in range(5):
                 self.selector = handle_html(self.cookie, self.url)
                 if self.selector is not None:
                     info = self.selector.xpath("//div[@class='c']")[1]
@@ -36,8 +36,7 @@ class CommentParser(Parser):
         """获取长转发微博"""
         try:
             wb_content = self.get_long_weibo()
-            weibo_content = wb_content[:wb_content.rfind(u'原文转发')]
-            return weibo_content
+            return wb_content[:wb_content.rfind(u'原文转发')]
         except Exception as e:
             logger.exception(e)
 

@@ -96,20 +96,27 @@ class Spider:
                         'user_uri': x['id'],
                         'since_date': x.get('since_date', self.since_date),
                         'end_date': x.get('end_date', self.end_date),
-                    }, [
-                        user_id for user_id in user_id_list
+                    },
+                    [
+                        user_id
+                        for user_id in user_id_list
                         if isinstance(user_id, dict)
-                    ])) + list(
-                        map(
-                            lambda x: {
-                                'user_uri': x,
-                                'since_date': self.since_date,
-                                'end_date': self.end_date
-                            },
-                            set([
-                                user_id for user_id in user_id_list
-                                if not isinstance(user_id, dict)
-                            ])))
+                    ],
+                )
+            ) + list(
+                map(
+                    lambda x: {
+                        'user_uri': x,
+                        'since_date': self.since_date,
+                        'end_date': self.end_date,
+                    },
+                    {
+                        user_id
+                        for user_id in user_id_list
+                        if not isinstance(user_id, dict)
+                    },
+                )
+            )
             if FLAGS.u:
                 config_util.add_user_uri_list(self.user_config_file_path,
                                               user_id_list)
@@ -169,7 +176,7 @@ class Spider:
                         self.global_wait[0][1] *
                         min(1, self.page_count / self.global_wait[0][0]))
                     logger.info(u'即将进入全局等待时间，%d秒后程序继续执行' % wait_seconds)
-                    for i in tqdm(range(wait_seconds)):
+                    for _ in tqdm(range(wait_seconds)):
                         sleep(1)
                     self.page_count = 0
                     self.global_wait.append(self.global_wait.pop(0))
@@ -205,7 +212,7 @@ class Spider:
                     if self.page_count >= self.global_wait[0][0]:
                         logger.info(u'即将进入全局等待时间，%d秒后程序继续执行' %
                                     self.global_wait[0][1])
-                        for i in tqdm(range(self.global_wait[0][1])):
+                        for _ in tqdm(range(self.global_wait[0][1])):
                             sleep(1)
                         self.page_count = 0
                         self.global_wait.append(self.global_wait.pop(0))
@@ -224,21 +231,18 @@ class Spider:
     def _get_filepath(self, type):
         """获取结果文件路径"""
         try:
-            dir_name = self.user.nickname
-            if self.result_dir_name:
-                dir_name = self.user.id
+            dir_name = self.user.id if self.result_dir_name else self.user.nickname
             if FLAGS.output_dir is not None:
                 file_dir = FLAGS.output_dir + os.sep + dir_name
             else:
                 file_dir = (os.getcwd() + os.sep + 'weibo' + os.sep + dir_name)
-            if type == 'img' or type == 'video':
+            if type in ['img', 'video']:
                 file_dir = file_dir + os.sep + type
             if not os.path.isdir(file_dir):
                 os.makedirs(file_dir)
-            if type == 'img' or type == 'video':
+            if type in ['img', 'video']:
                 return file_dir
-            file_path = file_dir + os.sep + self.user.id + '.' + type
-            return file_path
+            return file_dir + os.sep + self.user.id + '.' + type
         except Exception as e:
             logger.exception(e)
 
@@ -322,9 +326,9 @@ class Spider:
                 self.write_weibo(weibos)
                 self.got_num += len(weibos)
             if not self.filter:
-                logger.info(u'共爬取' + str(self.got_num) + u'条微博')
+                logger.info(f'共爬取{str(self.got_num)}条微博')
             else:
-                logger.info(u'共爬取' + str(self.got_num) + u'条原创微博')
+                logger.info(f'共爬取{str(self.got_num)}条原创微博')
             logger.info(u'信息抓取完毕')
             logger.info('*' * 100)
         except Exception as e:
@@ -337,15 +341,13 @@ class Spider:
                 logger.info(
                     u'没有配置有效的user_id，请通过config.json或user_id_list.txt配置user_id')
                 return
-            user_count = 0
             user_count1 = random.randint(*self.random_wait_pages)
             random_users = random.randint(*self.random_wait_pages)
-            for user_config in self.user_config_list:
+            for user_count, user_config in enumerate(self.user_config_list):
                 if (user_count - user_count1) % random_users == 0:
                     sleep(random.randint(*self.random_wait_seconds))
                     user_count1 = user_count
                     random_users = random.randint(*self.random_wait_pages)
-                user_count += 1
                 self.get_one_user(user_config)
         except Exception as e:
             logger.exception(e)
@@ -367,8 +369,7 @@ def _get_config():
         sys.exit()
     try:
         with open(config_path) as f:
-            config = json.loads(f.read())
-            return config
+            return json.loads(f.read())
     except ValueError:
         logger.error(u'config.json 格式不正确，请访问 '
                      u'https://github.com/dataabc/weiboSpider#2程序设置')

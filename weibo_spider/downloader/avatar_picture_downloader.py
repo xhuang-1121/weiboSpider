@@ -15,7 +15,7 @@ class AvatarPictureDownloader(ImgDownloader):
         if not os.path.isdir(file_dir):
             os.makedirs(file_dir)
 
-        for i, url in enumerate(urls):
+        for url in urls:
             index = url.rfind('/')
             file_name = url[index:]
             file_path = file_dir + os.sep + file_name

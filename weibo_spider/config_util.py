@@ -25,7 +25,7 @@ def validate_config(config):
     # 验证filter、pic_download、video_download
     argument_list = ['filter', 'pic_download', 'video_download']
     for argument in argument_list:
-        if config[argument] != 0 and config[argument] != 1:
+        if config[argument] not in [0, 1]:
             logger.warning(u'%s值应为0或1,请重新输入', config[argument])
             sys.exit()
 
@@ -123,11 +123,10 @@ def get_user_config_list(file_name, default_since_date):
         for line in lines:
             info = line.split(' ')
             if len(info) > 0 and info[0].isdigit():
-                user_config = {}
-                user_config['user_uri'] = info[0]
+                user_config = {'user_uri': info[0]}
                 if len(info) > 2 and _is_date(info[2]):
-                    if len(info) > 3 and _is_date(info[2] + ' ' + info[3]):
-                        user_config['since_date'] = info[2] + ' ' + info[3]
+                    if len(info) > 3 and _is_date(f'{info[2]} {info[3]}'):
+                        user_config['since_date'] = f'{info[2]} {info[3]}'
                     else:
                         user_config['since_date'] = info[2]
                 else:
@@ -147,19 +146,18 @@ def update_user_config_file(user_config_file_path, user_uri, nickname,
         lines = [line.decode('utf-8-sig') for line in lines]
         for i, line in enumerate(lines):
             info = line.split(' ')
-            if len(info) > 0:
-                if user_uri == info[0]:
-                    if len(info) == 1:
-                        info.append(nickname)
-                        info.append(start_time)
-                    if len(info) == 2:
-                        info.append(start_time)
-                    if len(info) > 3 and _is_date(info[2] + ' ' + info[3]):
-                        del info[3]
-                    if len(info) > 2:
-                        info[2] = start_time
-                    lines[i] = ' '.join(info)
-                    break
+            if len(info) > 0 and user_uri == info[0]:
+                if len(info) == 1:
+                    info.append(nickname)
+                    info.append(start_time)
+                if len(info) == 2:
+                    info.append(start_time)
+                if len(info) > 3 and _is_date(f'{info[2]} {info[3]}'):
+                    del info[3]
+                if len(info) > 2:
+                    info[2] = start_time
+                lines[i] = ' '.join(info)
+                break
     with codecs.open(user_config_file_path, 'w', encoding='utf-8') as f:
         f.write('\n'.join(lines))
 
